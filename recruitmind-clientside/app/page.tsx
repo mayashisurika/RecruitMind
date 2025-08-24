@@ -18,7 +18,7 @@ export default function Home() {
             Go beyond traditional hiring, assess what really matters
           </p>
           <Link
-            href="/candidate-login"
+            href="/candidate/login"
             className="bg-[#F19A04] text-white px-8 py-3 rounded-2xl shadow-md w-fit"
           >
             Start

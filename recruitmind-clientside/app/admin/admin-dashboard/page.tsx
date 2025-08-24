@@ -13,10 +13,10 @@ export default function DashboardPage() {
       <div className="flex flex-col md:flex-row items-center justify-center gap-20 pt-10">
         
         {/* Card 1 - Candidate Reports */}
-        <Link href="/admin-view-reports">
+        <Link href="/admin/candidates">
           <div className="w-64 h-60 bg-[#47684C] rounded-xl shadow-md text-white flex flex-col items-center justify-center text-center p-4 hover:scale-105 transition">
-            <h2 className="text-xl font-semibold mb-1">Candidate Reports</h2>
-            <p className="text-sm">View generated personality reports of candidates</p>
+            <h2 className="text-xl font-semibold mb-1">Candidate List</h2>
+            <p className="text-sm">Add/View candidates along with generated personality reports</p>
           </div>
         </Link>
 
