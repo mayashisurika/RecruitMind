@@ -1,6 +1,7 @@
 "use client";
 import { useParams, useRouter } from "next/navigation";
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { jwtDecode } from "jwt-decode";
 
 export default function TestConsentPage() {
   const router = useRouter();
@@ -8,6 +9,31 @@ export default function TestConsentPage() {
   const candidateId = params.candidateId as string;
 
   const [loading, setLoading] = useState(false);
+
+  // --- Token expiration check and redirect ---
+  // This effect checks the token once on mount and then every 30 seconds.
+  // If the token is expired while the user is on the page, they are redirected to the home page automatically.
+  useEffect(() => {
+    const checkToken = () => {
+      const token = typeof window !== "undefined" ? localStorage.getItem("access_token") : null;
+      if (!token) {
+        router.push("/");
+        return;
+      }
+      try {
+        const decoded: { exp: number } = jwtDecode(token);
+        if (Date.now() / 1000 > decoded.exp) {
+          localStorage.removeItem("access_token");
+          router.push("/");
+        }
+      } catch {
+        router.push("/");
+      }
+    };
+    checkToken(); // initial check on mount
+    const interval = setInterval(checkToken, 30000); // check every 30 seconds
+    return () => clearInterval(interval); // cleanup on unmount
+  }, [router]);
 
   const handleConsent = async (agree: boolean) => {
     if (!agree) {
@@ -27,7 +53,7 @@ export default function TestConsentPage() {
       );
 
       if (res.ok) {
-        router.push(`/candidate/personality-test/${candidateId}`);
+        router.push(`/candidate/${candidateId}/personality-test`);
       } else {
         alert("Failed to save consent. Try again.");
       }
@@ -98,14 +124,14 @@ export default function TestConsentPage() {
       <div className="flex gap-4">
         <button
           onClick={() => handleConsent(true)}
-          className="px-6 py-2 bg-green-600 text-white rounded hover:bg-green-700"
+          className="px-6 py-2 bg-green-600 text-white rounded hover:bg-green-700 active:scale-95 transform transition"
           disabled={loading}
         >
           I Agree
         </button>
         <button
           onClick={() => handleConsent(false)}
-          className="px-6 py-2 bg-red-600 text-white rounded hover:bg-red-700"
+          className="px-6 py-2 bg-red-600 text-white rounded hover:bg-red-700 active:scale-95 transform transition"
           disabled={loading}
         >
           I Do Not Agree

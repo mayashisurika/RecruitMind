@@ -52,3 +52,9 @@ Thumbs.db
 # Firebase credentials
 apm-api/app/config/firebase_credentials.json
 
+
+# Ignore large ML model files
+*.safetensors
+*.bin
+*.pt
+*.h5

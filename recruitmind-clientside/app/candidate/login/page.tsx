@@ -43,7 +43,7 @@ export default function CandidateLogin() {
       });
       if (!res.ok) throw new Error("Invalid OTP");
       const data = await res.json();
-      localStorage.setItem("token", data.access_token);
+  localStorage.setItem("access_token", data.access_token);
 
       // Decode JWT to get candidate id (sub)
       const base64Url = data.access_token.split('.')[1];
@@ -56,7 +56,7 @@ export default function CandidateLogin() {
       localStorage.setItem("candidateId", candidateId);
 
       setMessage("🎉 Login successful!");
-      router.push(`/candidate/${candidateId}/personality-test`);
+      router.push(`/candidate/${candidateId}/test-consent`);
     } catch (err) {
       setMessage("❌ OTP verification failed. Try again.");
     } finally {

@@ -1,21 +1,40 @@
-import torch
-from transformers import AutoTokenizer, AutoModelForSequenceClassification
+# --- BiLSTM MBTI Model Loader (commented out) ---
+# import torch
+# from huggingface_hub import hf_hub_download
+# import pickle
+# class AdvancedBiLSTM(torch.nn.Module):
+#     def __init__(self, word_vocab_size, char_vocab_size):
+#         super().__init__()
+#         self.dummy = torch.nn.Linear(word_vocab_size, 16)
+#     def forward(self, x):
+#         return self.dummy(x)
+# model_path = hf_hub_download(repo_id="MalekOthman/mbti_bilstm", filename="pytorch_model.bin")
+# config_path = hf_hub_download(repo_id="MalekOthman/mbti_bilstm", filename="config.pkl")
+# config = pickle.load(open(config_path, "rb"))
+# model = AdvancedBiLSTM(config['word_vocab_size'], config['char_vocab_size'])
+# model.load_state_dict(torch.load(model_path))
+# model.eval()
+# def dummy_tokenizer(text):
+#     return torch.zeros((1, config['word_vocab_size']))
+# mbti_types = ["INTJ", "INTP", "ENTJ", "ENTP", "INFJ", "INFP", "ENFJ", "ENFP",
+#               "ISTJ", "ISFJ", "ESTJ", "ESFJ", "ISTP", "ISFP", "ESTP", "ESFP"]
+# def predict_mbti(text: str) -> str:
+#     inputs = dummy_tokenizer(text)
+#     with torch.no_grad():
+#         logits = model(inputs)
+#         predicted_class = torch.argmax(logits, dim=1).item()
+#     return mbti_types[predicted_class]
+# print("✅ BiLSTM MBTI model loaded successfully!")
 
-model_name = "Shunian/mbti-classification-roberta-base"
-tokenizer = AutoTokenizer.from_pretrained(model_name)
-model = AutoModelForSequenceClassification.from_pretrained(model_name)
 
 
+# --- HuggingFace Transformers MBTI Pipeline ---
+from transformers import pipeline
 
-def predict_mbti(text: str) -> str:
-	inputs = tokenizer(text, return_tensors="pt", truncation=True, padding=True)
-	with torch.no_grad():
-		outputs = model(**inputs)
-		logits = outputs.logits
-		predicted_class = torch.argmax(logits, dim=1).item()
-	# MBTI types in order for Shunian/mbti-classification-roberta-base
-	mbti_types = ["INTJ", "INTP", "ENTJ", "ENTP", "INFJ", "INFP", "ENFJ", "ENFP",
-				  "ISTJ", "ISFJ", "ESTJ", "ESFJ", "ISTP", "ISFP", "ESTP", "ESFP"]
-	return mbti_types[predicted_class]
+pipe = pipeline("text-classification", model="theta/MBTI-ckiplab-bert")
 
-print("✅ MBTI model loaded successfully!")
+def predict_mbti(text: str):
+    result = pipe(text)
+    return result[0]['label']
+
+print("✅ MBTI BERT model loaded successfully!")
