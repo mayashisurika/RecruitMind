@@ -389,10 +389,10 @@ export default function VideoTestPage() {
               autoPlay
               muted
               playsInline
-              className="w-full max-w-md mx-auto border rounded-lg shadow-sm bg-black"
+              className="w-full max-w-xl h-[360px] mx-auto border rounded-lg shadow-sm bg-black"
             />
             {/* Camera status overlay */}
-            <div className="absolute top-2 left-2 z-10">
+            <div className="absolute top-2 left-2  z-10">
               <div className={`px-2 py-1 rounded-full text-xs font-medium ${
                 streamRef.current 
                   ? 'bg-green-500 text-white' 

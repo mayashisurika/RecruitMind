@@ -8,11 +8,12 @@ import os
 from datetime import datetime
 
 # Add the facial-recognition module to path
-sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..', 'facial-recognition')))
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..", "facial-recognition")))
+
 # Import the emotion analysis function from the facial-recognition module
 from emotion_detector import analyze_video_from_url
 
-router = APIRouter(prefix="/api/v1", tags=["emotion-analysis"])
+router = APIRouter(tags=["emotion-analysis"])
 
 # Request models
 class EmotionAnalysisRequest(BaseModel):

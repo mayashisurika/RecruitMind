@@ -7,9 +7,20 @@ import random
 from datetime import datetime
 import logging
 import os
+import httpx
+from fastapi import BackgroundTasks
 from dotenv import load_dotenv
 
 load_dotenv()
+
+# # Dummy implementation for trigger_emotion_analysis
+# # Replace this with your actual emotion analysis logic or import
+# def trigger_emotion_analysis(candidate_id: str, video_doc_id: str):
+#     # Example: Log the trigger, or call an external service
+#     logger.info(f"Triggering emotion analysis for candidate {candidate_id}, video doc {video_doc_id}")
+#     # Actual emotion analysis logic goes here
+#     pass
+
 
 router = APIRouter(tags=["Video"])
 
@@ -74,6 +85,7 @@ async def get_video_questions(candidate_id: str):
 # POST video upload to Cloudinary and save metadata
 @router.post("/video-submission")
 async def submit_video(
+    background_tasks: BackgroundTasks,  # Add this line
     candidate_id: str = Form(...),
     session_id: str = Form(...),
     duration_seconds: float = Form(...),
@@ -128,10 +140,11 @@ async def submit_video(
         
         # Save video record to candidate-specific collection
         video_ref = db.collection("candidates").document(candidate_id).collection("video_submissions").add(video_record)
-        
+
         # Also save to main collection for admin queries
-        db.collection("video_submissions").add(video_record)
-        
+        main_video_ref = db.collection("video_submissions").add(video_record)
+        main_video_doc_id = main_video_ref[1].id  # Get the document ID from main collection
+
         # Update session status
         db.collection("video_sessions").document(session_id).update({
             "status": "completed",
@@ -139,9 +152,16 @@ async def submit_video(
             "video_url": upload_result["secure_url"]
         })
         
+        # Trigger emotion analysis automatically
+        background_tasks.add_task(
+            trigger_emotion_analysis,
+            candidate_id,
+            main_video_doc_id
+        )
+
         return {
             "success": True,
-            "message": "Video submitted successfully",
+            "message": "Video submitted successfully. Emotion analysis will be processed automatically.",
             "video_url": upload_result["secure_url"],
             "duration": duration_seconds
         }
@@ -222,3 +242,24 @@ async def get_all_video_submissions():
 @router.get("/video-health")
 async def health_check():
     return {"status": "healthy", "service": "video_recording"}
+
+
+
+async def trigger_emotion_analysis(candidate_id: str, video_submission_id: str):
+    """Trigger emotion analysis via internal API call"""
+    try:
+        async with httpx.AsyncClient(timeout=10.0) as client:
+            response = await client.post(
+                "http://localhost:8000/api/v1/analyze-video-emotions",  # Adjust port if different
+                json={
+                    "candidate_id": candidate_id,
+                    "video_submission_id": video_submission_id
+                }
+            )
+            if response.status_code == 200:
+                logger.info(f"Emotion analysis triggered successfully for candidate {candidate_id}")
+            else:
+                logger.error(f"Failed to trigger emotion analysis: {response.status_code} - {response.text}")
+                
+    except Exception as e:
+        logger.error(f"Failed to trigger emotion analysis for {candidate_id}: {e}")

@@ -220,10 +220,10 @@ export default function PersonalityTestPage() {
           questions.map((q, index) => (
             <div
               key={q.id}
-              className="mb-6 p-6 rounded-xl shadow-xl bg-white/80 backdrop-blur-lg border border-white/60 hover:bg-white/90 transition-all duration-300"
+              className="mb-6 p-6 rounded-xl shadow-xl bg-[#00353A] backdrop-blur-lg border border-white/60 hover:bg-white/90 hover:text-[#00353A] transition-all duration-300 group"
             >
               <div className="flex justify-between items-start mb-4">
-                <p className="font-semibold text-[#00353A] flex-1">
+                <p className="font-semibold text-white flex-1 group-hover:text-[#00353A]">
                   {index + 1}. {q.question}
                 </p>
                 {/* <span className="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded ml-4">

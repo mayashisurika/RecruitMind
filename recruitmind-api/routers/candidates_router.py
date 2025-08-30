@@ -12,14 +12,16 @@ class CandidateIn(BaseModel):
 async def add_candidate(candidate: CandidateIn):
     try:
         db = firestore.client()
-        doc_ref = db.collection("candidates").document()  # auto-ID
+        # Use email as candidateId for document ID (or generate a unique candidateId if preferred)
+        candidate_id = candidate.email  # You can use a UUID or another unique field if needed
+        doc_ref = db.collection("candidates").document(candidate_id)
         doc_ref.set({
             "name": candidate.name,
             "email": candidate.email,
             "active": True,
             "createdAt": firestore.SERVER_TIMESTAMP
         })
-        return {"message": "Candidate added successfully", "id": doc_ref.id}
+        return {"message": "Candidate added successfully", "id": candidate_id}
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error adding candidate: {str(e)}")
 

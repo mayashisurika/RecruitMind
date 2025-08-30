@@ -115,36 +115,68 @@ export default function LeadershipTest() {
   };
 
   return (
-    <div className="max-w-2xl mx-auto p-4">
-      <h1 className="text-2xl font-bold mb-4">Leadership Style Test</h1>
-
-      {questions.map((q) => {
-        const selectedIdx = answers.find((a) => a.questionId === q.id)
-          ? q.styles.findIndex(
-              (style) =>
-                style === answers.find((a) => a.questionId === q.id)?.style
-            )
-          : -1;
-        return (
-          <QuestionCard
-            key={q.id}
-            question={q.text}
-            options={q.options}
-            selected={selectedIdx !== -1 ? String(selectedIdx) : ""}
-            onSelect={(option: string, idx: number) => handleSelect(q.id, q.styles[idx], option)}
-          />
-        );
-      })}
-
-      {questions.length > 0 && (
-        <button
-          onClick={handleSubmit}
-          disabled={loading}
-          className="mt-4 px-4 py-2 bg-green-500 text-white rounded-md"
-        >
-          {loading ? "Submitting..." : "Submit"}
-        </button>
-      )}
+    <div className="min-h-screen bg-gradient-to-br from-[#C79D7C] via-[#CEA98B] to-[#F4EAE2] font-poppins relative overflow-hidden">
+      {/* Decorative Background Elements */}
+      <div className="absolute inset-0 overflow-hidden">
+        <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-gradient-to-r from-[#00353A]/30 to-pink-400/10 rounded-full blur-3xl"></div>
+        <div className="absolute top-20 left-20 w-4 h-4 bg-[#00353A]/30 rounded-full animate-pulse"></div>
+        <div className="absolute top-40 right-32 w-6 h-6 bg-[#00353A]/40 rotate-45 animate-bounce" style={{animationDelay: '1s'}}></div>
+        <div className="absolute bottom-40 left-32 w-3 h-3 bg-[#00353A]/20 rounded-full animate-pulse" style={{animationDelay: '2s'}}></div>
+        <div className="absolute bottom-20 right-20 w-5 h-5 bg-[#00353A]/30 rotate-12 animate-bounce" style={{animationDelay: '0.5s'}}></div>
+      </div>
+      <div className="max-w-2xl mx-auto p-6 relative z-10">
+        <div className="text-center mb-6">
+          <h1 className="text-3xl font-bold text-[#00353A] mb-2">Leadership Style Test</h1>
+          <p className="text-gray-600">Discover your leadership style by answering all questions below</p>
+        </div>
+        {questions.length === 0 ? (
+          <div className="text-center py-8">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-orange-500 mx-auto mb-4"></div>
+            <p className="text-gray-600">Loading questions...</p>
+          </div>
+        ) : (
+          questions.map((q, idx) => {
+            const selectedIdx = answers.find((a) => a.questionId === q.id)
+              ? q.styles.findIndex(
+                  (style) => style === answers.find((a) => a.questionId === q.id)?.style
+                )
+              : -1;
+            return (
+              <div
+                key={q.id}
+              >
+                {/* Remove duplicate question text here, only show QuestionCard */}
+                <QuestionCard
+                  question={`${idx + 1}. ${q.text}`}
+                  options={q.options}
+                  selected={selectedIdx !== -1 ? String(selectedIdx) : ""}
+                  onSelect={(option: string, i: number) => handleSelect(q.id, q.styles[i], option)}
+                />
+              </div>
+            );
+          })
+        )}
+        {questions.length > 0 && (
+          <button
+            onClick={handleSubmit}
+            disabled={loading}
+            className={`mt-6 w-full px-6 py-4 rounded-lg font-semibold text-white transition-all ${
+              loading
+                ? 'bg-gray-400 cursor-not-allowed'
+                : 'bg-gradient-to-r from-orange-400 to-orange-500 hover:from-orange-500 hover:to-orange-600 hover:scale-105 shadow-lg'
+            }`}
+          >
+            {loading ? (
+              <div className="flex items-center justify-center">
+                <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white mr-3"></div>
+                Submitting...
+              </div>
+            ) : (
+              "Submit"
+            )}
+          </button>
+        )}
+      </div>
     </div>
   );
 }

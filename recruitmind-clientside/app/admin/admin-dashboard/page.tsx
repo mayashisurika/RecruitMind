@@ -29,7 +29,7 @@ export default function DashboardPage() {
         </Link>
 
         {/* Card 3 - Admin List */}
-        <Link href="/admin/list">
+        <Link href="/admin/admin-list">
           <div className="w-64 h-60 bg-[#CB6A4B] rounded-xl shadow-md text-white flex flex-col items-center justify-center text-center p-4 hover:scale-105 transition">
             <h2 className="text-xl font-semibold mb-1">Admin List</h2>
             <p className="text-sm">Add and update authorized admins</p>
