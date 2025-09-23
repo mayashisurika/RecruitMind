@@ -19,7 +19,7 @@ export default function Navbar() {
           <div className="hidden md:flex space-x-6 font-medium text-sm text-center items-center">
             <Link href="/" className="hover:text-accent1 transition">Home</Link>
             <Link href="/candidate/login" className="hover:text-accent1 transition">Start Test</Link>
-            <Link href="/admin/admin-login" className="bg-[#0C2F37] text-white px-4 py-2 rounded-full text-sm hover:bg-opacity-90 transition">Admin Login</Link>          
+            <Link href="/admin/login" className="bg-[#0C2F37] text-white px-4 py-2 rounded-full text-sm hover:bg-opacity-90 transition">Admin Login</Link>          
           </div>
 
           {/* Mobile menu toggle

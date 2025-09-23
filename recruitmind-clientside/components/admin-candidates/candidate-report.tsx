@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { X, Download, User, Brain, Target, Video, CheckCircle, AlertCircle, Clock } from 'lucide-react';
+import { X, Download, User, Brain, Target, Video, CheckCircle, AlertCircle, Clock, Play, BarChart3 } from 'lucide-react';
 
 interface CandidateReportProps {
   candidateId: string;
@@ -15,29 +15,47 @@ interface ReportData {
     active: boolean;
   };
   mbti_results?: {
-    results: {
-      personality_type: string;
-      dimensions: any;
-      characteristics: string[];
-      strengths: string[];
-      potential_careers: string[];
-    };
+    confidence?: string;
+    final_mbti_type?: string;
+    // results?: {
+    //   personality_type?: string;
+    //   dimensions?: any;
+    //   characteristics?: string[];
+    //   strengths?: string[];
+    //   potential_careers?: string[];
+    // };
   };
   leadership_results?: {
-    results: {
-      scores: Record<string, number>;
-      total_score: number;
-      leadership_level: string;
-      recommendations: string[];
+    feedback?: {
+      effectiveness_feedback?: string;
+      flexibility_feedback?: string;
+      primary_style_description?: string;
+    };
+    scores?: {
+      primary_style?: number;
+    };
+    results?: {
+      scores?: Record<string, number>;
+      total_score?: number;
+      leadership_level?: string;
+      recommendations?: string[];
     };
   };
   video_analysis?: {
-    results: {
-      emotion_summary: Record<string, number>;
-      average_confidence: number;
-      insights: string[];
-      recommendations: string[];
+     analysis_result?: {
+      analysis?: {
+        confidence_level?: string;
+        dominant_emotion?: string;
+        message?: string;
+      };
     };
+  };
+  video_submissions?: {
+    video_url?: string;
+    emotions?: Record<string, number>;
+    dominant_emotion?: string;
+    timestamp?: any;
+    status?: string;
   };
   hr_insights: {
     overall_recommendation: string;
@@ -75,6 +93,7 @@ const CandidateReport: React.FC<CandidateReportProps> = ({ candidateId, onClose 
         throw new Error('Failed to fetch report data');
       }
       const data = await response.json();
+      console.log('Report data:', data); // Debug log
       setReportData(data);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'An error occurred');
@@ -124,6 +143,25 @@ const CandidateReport: React.FC<CandidateReportProps> = ({ candidateId, onClose 
     return 'bg-gray-100 text-gray-800';
   };
 
+  const getEmotionColor = (emotion: string) => {
+    const colors: Record<string, string> = {
+      happy: 'text-green-600 bg-green-50',
+      neutral: 'text-blue-600 bg-blue-50',
+      surprised: 'text-yellow-600 bg-yellow-50',
+      sad: 'text-red-600 bg-red-50',
+      angry: 'text-red-700 bg-red-100',
+      fearful: 'text-purple-600 bg-purple-50',
+      disgusted: 'text-orange-600 bg-orange-50'
+    };
+    return colors[emotion.toLowerCase()] || 'text-gray-600 bg-gray-50';
+  };
+
+  const formatConfidenceLevel = (confidence: number) => {
+    if (confidence >= 0.8) return { text: 'High', color: 'text-green-600' };
+    if (confidence >= 0.6) return { text: 'Medium', color: 'text-yellow-600' };
+    return { text: 'Low', color: 'text-red-600' };
+  };
+
   if (loading) {
     return (
       <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
@@ -158,7 +196,7 @@ const CandidateReport: React.FC<CandidateReportProps> = ({ candidateId, onClose 
     );
   }
 
-  const { candidate_info, mbti_results, leadership_results, video_analysis, hr_insights, completion_status } = reportData;
+  const { candidate_info, mbti_results, leadership_results, video_analysis, video_submissions, hr_insights, completion_status } = reportData;
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
@@ -300,30 +338,15 @@ const CandidateReport: React.FC<CandidateReportProps> = ({ candidateId, onClose 
                   MBTI Assessment
                 </h4>
                 {mbti_results ? (
-                  <div>
-                    <div className="text-center mb-4">
-                      <div className="text-3xl font-bold text-blue-600 mb-2">
-                        {mbti_results.results.personality_type}
-                      </div>
-                      <p className="text-sm text-gray-600">Personality Type</p>
-                    </div>
-                    {mbti_results.results.strengths && (
-                      <div>
-                        <p className="text-sm font-medium text-gray-700 mb-2">Key Strengths:</p>
-                        <ul className="text-xs text-gray-600 space-y-1">
-                          {mbti_results.results.strengths.slice(0, 3).map((strength, index) => (
-                            <li key={index} className="flex items-center">
-                              <div className="w-1.5 h-1.5 bg-blue-600 rounded-full mr-2"></div>
-                              {strength}
-                            </li>
-                          ))}
-                        </ul>
-                      </div>
-                    )}
+                  <div className="text-center py-4">
+                    <CheckCircle className="w-12 h-12 text-green-600 mx-auto mb-2" />
+                    <p className="text-lg font-semibold text-green-600 mb-1">Complete</p>
+                    <p className="text-sm text-gray-600">Assessment submitted</p>
                   </div>
                 ) : (
                   <div className="text-center py-4">
                     <Clock className="w-8 h-8 text-gray-400 mx-auto mb-2" />
+                    <p className="text-lg font-semibold text-gray-600 mb-1">Pending</p>
                     <p className="text-sm text-gray-600">Assessment not completed</p>
                   </div>
                 )}
@@ -336,23 +359,15 @@ const CandidateReport: React.FC<CandidateReportProps> = ({ candidateId, onClose 
                   Leadership Assessment
                 </h4>
                 {leadership_results ? (
-                  <div>
-                    <div className="text-center mb-4">
-                      <div className="text-3xl font-bold text-green-600 mb-2">
-                        {leadership_results.results.total_score ? leadership_results.results.total_score.toFixed(1) : 'N/A'}
-                      </div>
-                      <p className="text-sm text-gray-600">Overall Score</p>
-                    </div>
-                    <div className="mb-4">
-                      <p className="text-sm font-medium text-gray-700 mb-1">Leadership Level:</p>
-                      <p className="text-sm text-green-600 font-medium">
-                        {leadership_results.results.leadership_level || 'Evaluating'}
-                      </p>
-                    </div>
+                  <div className="text-center py-4">
+                    <CheckCircle className="w-12 h-12 text-green-600 mx-auto mb-2" />
+                    <p className="text-lg font-semibold text-green-600 mb-1">Complete</p>
+                    <p className="text-sm text-gray-600">Assessment submitted</p>
                   </div>
                 ) : (
                   <div className="text-center py-4">
                     <Clock className="w-8 h-8 text-gray-400 mx-auto mb-2" />
+                    <p className="text-lg font-semibold text-gray-600 mb-1">Pending</p>
                     <p className="text-sm text-gray-600">Assessment not completed</p>
                   </div>
                 )}
@@ -365,30 +380,15 @@ const CandidateReport: React.FC<CandidateReportProps> = ({ candidateId, onClose 
                   Video Analysis
                 </h4>
                 {video_analysis ? (
-                  <div>
-                    <div className="text-center mb-4">
-                      <div className="text-3xl font-bold text-purple-600 mb-2">
-                        {Math.round(video_analysis.results.average_confidence * 100)}%
-                      </div>
-                      <p className="text-sm text-gray-600">Confidence Level</p>
-                    </div>
-                    {video_analysis.results.emotion_summary && (
-                      <div>
-                        <p className="text-sm font-medium text-gray-700 mb-2">Emotional Profile:</p>
-                        <div className="space-y-2">
-                          {Object.entries(video_analysis.results.emotion_summary).slice(0, 3).map(([emotion, value]) => (
-                            <div key={emotion} className="flex items-center justify-between text-xs">
-                              <span className="capitalize text-gray-600">{emotion}</span>
-                              <span className="font-medium text-purple-600">{Math.round(value * 100)}%</span>
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-                    )}
+                  <div className="text-center py-4">
+                    <CheckCircle className="w-12 h-12 text-green-600 mx-auto mb-2" />
+                    <p className="text-lg font-semibold text-green-600 mb-1">Complete</p>
+                    <p className="text-sm text-gray-600">Video analyzed</p>
                   </div>
                 ) : (
                   <div className="text-center py-4">
                     <Clock className="w-8 h-8 text-gray-400 mx-auto mb-2" />
+                    <p className="text-lg font-semibold text-gray-600 mb-1">Pending</p>
                     <p className="text-sm text-gray-600">Video not analyzed</p>
                   </div>
                 )}
@@ -412,19 +412,157 @@ const CandidateReport: React.FC<CandidateReportProps> = ({ candidateId, onClose 
               </div>
             )}
 
-            {/* Performance Insights */}
+            {/* Enhanced Performance Insights */}
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+              {/* MBTI Details */}
               <div className="bg-white border border-gray-200 rounded-xl p-6">
-                <h4 className="font-semibold text-gray-900 mb-3">Personality Summary</h4>
-                <p className="text-sm text-gray-600">{hr_insights.personality_summary}</p>
+                <h4 className="font-semibold text-gray-900 mb-3 flex items-center">
+                  <Brain className="w-4 h-4 mr-2 text-blue-600" />
+                  Personality Analysis
+                </h4>
+                {mbti_results ? (
+                  <div className="space-y-3">
+                    {mbti_results.final_mbti_type && (
+                      <div>
+                        <p className="text-xs text-gray-500 uppercase tracking-wide">MBTI Type</p>
+                        <p className="text-lg font-bold text-blue-600">
+                          {mbti_results.final_mbti_type}
+                        </p>
+                      </div>
+                    )}
+                    {mbti_results.confidence && (
+                      <div>
+                        <p className="text-xs text-gray-500 uppercase tracking-wide">Confidence Level</p>
+                        <p className="text-sm font-semibold text-gray-700">
+                          {mbti_results.confidence}
+                        </p>
+                      </div>
+                    )}
+                  </div>
+                ) : (
+                  <p className="text-sm text-gray-600">{hr_insights.personality_summary}</p>
+                )}
               </div>
+
+
+              {/* Leadership Details */}
               <div className="bg-white border border-gray-200 rounded-xl p-6">
-                <h4 className="font-semibold text-gray-900 mb-3">Leadership Potential</h4>
-                <p className="text-sm text-gray-600">{hr_insights.leadership_potential}</p>
+                <h4 className="font-semibold text-gray-900 mb-3 flex items-center">
+                  <Target className="w-4 h-4 mr-2 text-green-600" />
+                  Leadership Assessment
+                </h4>
+                {leadership_results ? (
+                  <div className="space-y-3">
+                    {leadership_results.scores?.primary_style && (
+                      <div>
+                        <p className="text-xs text-gray-500 uppercase tracking-wide mb-1">Primary Leadership Style</p>
+                        <div className="flex items-center space-x-2">
+                          <BarChart3 className="w-4 h-4 text-green-600" />
+                          <div className="flex-1 bg-gray-200 rounded-full h-2">
+                            <div 
+                              className="bg-green-600 h-2 rounded-full transition-all duration-300"
+                              style={{ width: `${(leadership_results.scores.primary_style / 5) * 100}%` }}
+                            ></div>
+                          </div>
+                          <span className="text-sm font-semibold text-gray-900">
+                            {leadership_results.scores.primary_style}/5
+                          </span>
+                        </div>
+                      </div>
+                    )}
+                    {leadership_results.feedback && (
+                      <div>
+                        <p className="text-xs text-gray-500 uppercase tracking-wide mb-1">Leadership Feedback</p>
+                        <div className="space-y-2">
+                          {leadership_results.feedback.effectiveness_feedback && (
+                            <div className="text-sm text-gray-700 bg-gray-50 p-2 rounded">
+                              <span className="font-medium text-gray-900">Effectiveness: </span>
+                              {leadership_results.feedback.effectiveness_feedback.length > 80 
+                                ? `${leadership_results.feedback.effectiveness_feedback.substring(0, 80)}...` 
+                                : leadership_results.feedback.effectiveness_feedback}
+                            </div>
+                          )}
+                          {leadership_results.feedback.flexibility_feedback && (
+                            <div className="text-sm text-gray-700 bg-gray-50 p-2 rounded">
+                              <span className="font-medium text-gray-900">Flexibility: </span>
+                              {leadership_results.feedback.flexibility_feedback.length > 80 
+                                ? `${leadership_results.feedback.flexibility_feedback.substring(0, 80)}...` 
+                                : leadership_results.feedback.flexibility_feedback}
+                            </div>
+                          )}
+                          {leadership_results.feedback.primary_style_description && (
+                            <div className="text-sm text-gray-700 bg-gray-50 p-2 rounded">
+                              <span className="font-medium text-gray-900">Style: </span>
+                              {leadership_results.feedback.primary_style_description.length > 80 
+                                ? `${leadership_results.feedback.primary_style_description.substring(0, 80)}...` 
+                                : leadership_results.feedback.primary_style_description}
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                ) : (
+                  <p className="text-sm text-gray-600">{hr_insights.leadership_potential}</p>
+                )}
               </div>
+
+              {/* Video Analysis Details */}
               <div className="bg-white border border-gray-200 rounded-xl p-6">
-                <h4 className="font-semibold text-gray-900 mb-3">Interview Performance</h4>
-                <p className="text-sm text-gray-600">{hr_insights.interview_performance}</p>
+                <h4 className="font-semibold text-gray-900 mb-3 flex items-center">
+                  <Video className="w-4 h-4 mr-2 text-purple-600" />
+                  Video Interview Analysis
+                </h4>
+                {video_analysis ? (
+                  <div className="space-y-3">
+                    <div>
+                      <p className="text-xs text-gray-500 uppercase tracking-wide mb-1">
+                        Confidence Level
+                      </p>
+                      <span className="text-sm font-medium text-gray-700">
+                        {video_analysis.analysis_result?.analysis?.confidence_level ?? "N/A"}
+                      </span>
+                    </div>
+                    <div>
+                      <p className="text-xs text-gray-500 uppercase tracking-wide mb-1">
+                        Dominant Emotion
+                      </p>
+                      <span className="px-2 py-1 rounded-full text-xs font-medium capitalize bg-purple-100 text-purple-700">
+                        {video_analysis.analysis_result?.analysis?.dominant_emotion ?? "N/A"}
+                      </span>
+                    </div>
+                    <div>
+                      <p className="text-xs text-gray-500 uppercase tracking-wide mb-1">
+                        Message
+                      </p>
+                      <p className="text-sm text-gray-700">
+                        {video_analysis.analysis_result?.analysis?.message ?? "N/A"}
+                      </p>
+                    </div>
+                    
+                    {video_submissions && video_submissions.video_url ? (
+                      <div>
+                        <p className="text-xs text-gray-500 uppercase tracking-wide mb-1">
+                          Video Recording
+                        </p>
+                        <button
+                          onClick={() => window.open(video_submissions.video_url, '_blank')}
+                          className="flex items-center space-x-2 bg-purple-100 hover:bg-purple-200
+                                    text-purple-700 px-3 py-2 rounded-lg text-sm font-medium
+                                    transition-colors"
+                        >
+                          <Play className="w-4 h-4" />
+                          <span>Watch Interview</span>
+                        </button>
+                      </div>
+                    ) : (
+                      <p className="text-sm text-gray-600">No video submitted</p>
+                    )}
+
+                  </div>
+                ) : (
+                  <p className="text-sm text-gray-600">{hr_insights.interview_performance}</p>
+                )}
               </div>
             </div>
 

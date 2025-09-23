@@ -5,6 +5,7 @@ import AddCandidateForm from "@/components/admin-candidates/add-candidate-form";
 import CandidateTable from "@/components/admin-candidates/candidate-table";
 import SearchFilter from "@/components/admin-candidates/search-filter";
 
+
 interface Candidate {
   id: string;
   name: string;
