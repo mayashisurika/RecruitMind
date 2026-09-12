@@ -1,19 +1,21 @@
 # fixed_mbti_router.py - Complete Fixed Backend
 
-from fastapi import APIRouter, HTTPException, BackgroundTasks
-from utils.firebase_configuration import db
-from datetime import datetime
-import random, os, smtplib
-from email.mime.text import MIMEText
-from pydantic import BaseModel
-from typing import Dict, List, Tuple
-import statistics
+from fastapi import APIRouter, HTTPException, BackgroundTasks  # FastAPI imports
+from utils.firebase_configuration import db  # Firestore DB
+from datetime import datetime  # For timestamps
+import random, os, smtplib  # Random for sampling, os for env vars, smtplib for email
+from email.mime.text import MIMEText  # For email content
+from pydantic import BaseModel  # For request validation
+from typing import Dict, List, Tuple  # Type hints
+import statistics  # Not used, but imported
 
-import importlib.util
-import sys
-import os
+import importlib.util  # For dynamic model loading
+import sys  # For path manipulation
+import os  # For file paths
 
+########################################
 # Load your existing ML model
+########################################
 sys.path.append(r"S:\SLIITA\Year 3 UOB\RecruitMind")
 model_path = os.path.join(r"S:\SLIITA\Year 3 UOB\RecruitMind", "personality-questionnaire", "load-model.py")
 spec = importlib.util.spec_from_file_location("load_model", model_path)
@@ -21,8 +23,14 @@ load_model = importlib.util.module_from_spec(spec)
 sys.modules["load_model"] = load_model
 spec.loader.exec_module(load_model)
 
+########################################
+# FastAPI Router for MBTI endpoints
+########################################
 router = APIRouter(prefix="/mbti", tags=["MBTI"])
 
+########################################
+# MBTI Scoring Class (Traditional method)
+########################################
 class FixedMBTIScorer:
     """Fixed MBTI scoring with proper dimension calculation"""
     
@@ -88,6 +96,10 @@ class FixedMBTIScorer:
         }
 
     def calculate_traditional_mbti(self, answers: Dict[str, str]) -> Tuple[str, Dict, Dict]:
+        """
+        Calculate MBTI using fixed traditional scoring
+        Returns: MBTI type, dimension scores, and details
+        """
         """Calculate MBTI using fixed traditional scoring"""
         
         dimension_scores = {"IE": 0, "NS": 0, "TF": 0, "JP": 0}
@@ -151,6 +163,9 @@ class FixedMBTIScorer:
         
         return mbti_type, dimension_scores, dimension_details
 
+########################################
+# Convert answers to ML model input format
+########################################
 def create_personality_description_for_ml(answers):
     """Convert Q&A responses to personality description format for ML model"""
     
@@ -211,9 +226,15 @@ def create_personality_description_for_ml(answers):
     return description
 
 # Initialize scorer
+########################################
+# Initialize MBTI scorer
+########################################
 mbti_scorer = FixedMBTIScorer()
 
 # Valid MBTI types for validation
+########################################
+# Valid MBTI types for validation
+########################################
 VALID_MBTI_TYPES = [
     "INTJ", "INTP", "ENTJ", "ENTP", "INFJ", "INFP", "ENFJ", "ENFP",
     "ISTJ", "ISFJ", "ESTJ", "ESFJ", "ISTP", "ISFP", "ESTP", "ESFP"
@@ -221,6 +242,9 @@ VALID_MBTI_TYPES = [
 
 # ========== API ENDPOINTS ==========
 
+########################################
+# Endpoint: Get randomized MBTI questions
+########################################
 @router.get("/questions")
 def get_mbti_questions():
     """Get randomized MBTI questions"""
@@ -240,9 +264,16 @@ def get_mbti_questions():
     random.shuffle(selected_questions)
     return {"questions": selected_questions}
 
+########################################
+# Request model for MBTI submission
+########################################
 class MBTISubmitRequest(BaseModel):
     answers: dict
 
+########################################
+# Endpoint: Submit MBTI answers
+# Uses ML model and traditional scoring
+########################################
 @router.post("/submit")
 def submit_mbti(candidate_id: str, payload: MBTISubmitRequest):
     """
@@ -310,6 +341,9 @@ def submit_mbti(candidate_id: str, payload: MBTISubmitRequest):
         print(f"Error in submit_mbti: {e}")
         raise HTTPException(status_code=500, detail=f"Processing error: {str(e)}")
 
+########################################
+# Endpoint: Get MBTI result for candidate
+########################################
 @router.get("/result/{candidate_id}")
 def get_mbti_result(candidate_id: str):
     """Get MBTI results for a candidate"""
@@ -328,12 +362,17 @@ def get_mbti_result(candidate_id: str):
         "created_at": result.get("created_at")
     }
 
-# Email functionality (keep existing)
+########################################
+# Email functionality (send MBTI result)
+########################################
 SMTP_USER = os.getenv("SMTP_USER")
 SMTP_PASS = os.getenv("SMTP_PASS")
 SMTP_SERVER = os.getenv("SMTP_SERVER", "smtp.gmail.com")
 SMTP_PORT = int(os.getenv("SMTP_PORT", "587"))
 
+########################################
+# Send email with MBTI result
+########################################
 def send_email(to_email: str, mbti_type: str):
     msg = MIMEText(f"Thanks for completing the test.\n\nYour MBTI type is: {mbti_type}")
     msg["Subject"] = "Your MBTI Test Results"
@@ -345,6 +384,9 @@ def send_email(to_email: str, mbti_type: str):
         s.login(SMTP_USER, SMTP_PASS)
         s.send_message(msg)
 
+########################################
+# Endpoint: Email MBTI result to candidate
+########################################
 @router.post("/email-results/{candidate_id}")
 def email_results(candidate_id: str, background_tasks: BackgroundTasks):
     res_doc = db.collection("mbti_results").document(candidate_id).get()
@@ -362,7 +404,9 @@ def email_results(candidate_id: str, background_tasks: BackgroundTasks):
     background_tasks.add_task(send_email, email, mbti_type)
     return {"message": "Email queued"}
 
-# ========== TESTING/DEBUG ENDPOINT ==========
+########################################
+# Endpoint: Test ML model input format (debug)
+########################################
 @router.post("/test-ml-input")
 def test_ml_input(payload: MBTISubmitRequest):
     """Test endpoint to debug ML model input format"""
